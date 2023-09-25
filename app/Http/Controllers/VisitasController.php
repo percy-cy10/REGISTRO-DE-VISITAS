@@ -18,14 +18,14 @@ class VisitasController extends Controller
     public function __construct() {
         $this->middleware('auth');
     }
-    
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         date_default_timezone_set("America/Lima");
-        
+
         $oficinas = Oficinas::all();
         $sedes = Sedes::all();
 
@@ -40,7 +40,7 @@ class VisitasController extends Controller
 
         if($user->roles->first()->name == 'admin' or $user->roles->first()->name == 'supervisor'){
             $reportes = Visitas::where('estado', '1')->get();
-          
+
             return view('modulos.reporte-visitas', ['reportes' => $reportes]);
         }else{
             $user = User::find($user->id);
@@ -65,7 +65,7 @@ class VisitasController extends Controller
      */
     public function create()
     {
-       
+
     }
 
     /**
@@ -74,19 +74,19 @@ class VisitasController extends Controller
     public function store(Request $request)
     {
         date_default_timezone_set("America/Lima");
-        
+
         // dd($request);
         $validatedData = $request->validate([
             'dni' => [ 'required','digits:8',
                function ($attribute, $value, $fail) {
                     if (Visitas::where('dni', $value)->where('estado', '2')->exists()) {
-                        
+
                         $ultimaVisita = Visitas::where('dni', $value)->orderBy('created_at', 'desc')->first();
                         $now = Carbon::now();
-                        
+
                         $ultimaVisitaTime = Carbon::parse($ultimaVisita->created_at);
                         $diffInMinutes = $now->diffInMinutes($ultimaVisitaTime);
-                        
+
                         if ($diffInMinutes < 10) {
                             $fail('Ya se registró una visita con este DNI en los últimos 10 minutos.');
                         }
@@ -118,11 +118,11 @@ class VisitasController extends Controller
 
         $nombreOficina = Oficinas::where('nombre_oficina', $request->input('oficina'))->first();
         $visita->oficina_id = $nombreOficina->id;
-        
+
         $visita->personero_id = $request->input('personero_id');
         $visita->estado = '2';
 
-        
+
         if($visita->save()){
             return redirect()->route('registrar-visita.index')->with('message', 'Se registro exitosamente la visita.');
         }else{
@@ -163,4 +163,3 @@ class VisitasController extends Controller
         //
     }
 }
-
